@@ -9,7 +9,7 @@ def download_model():
 
     if not s3_key or not local_path:
         print(
-            "Error: Missing YOLO_S3_SEG_MODEL_KEY or YOLO_SEG_MODEL_LOCAL_PATH environment variables"
+            "Error: Missing YOLO_SEG_MODEL_S3KEY or YOLO_SEG_MODEL_LOCALPATH environment variables"
         )
         sys.exit(1)
 

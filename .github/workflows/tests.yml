@@ -28,8 +28,8 @@ jobs:
             echo "AWS_REGION_NAME=us-east-1" >> .env
             echo "AWS_STORAGE_BUCKET=dummy-bucket" >> .env
             echo "AWS_RAW_IMG_QUEUE_URL=https://sqs.dummy.url" >> .env
-            echo "YOLO_S3_SEG_MODEL_KEY=models/yolo_seg.pt" >> .env
-            echo "YOLO_SEG_MODEL_LOCAL_PATH=/app/models/yolo_seg.pt" >> .env
+            echo "YOLO_SEG_MODEL_S3KEY=models/yolo_seg.pt" >> .env
+            echo "YOLO_SEG_MODEL_LOCALPATH=/app/models/yolo_seg.pt" >> .env
             
 
       - name: Build and Run Tests
