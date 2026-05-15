@@ -35,4 +35,7 @@ jobs:
       - name: Build and Run Tests
         run: |
           docker build -t processor-test .
-          docker run --rm --env-file .env processor-test python3 -m pytest tests -v
+          docker run --rm \
+          --entrypoint "" \
+          --env-file .env \
+          processor-test python3 -m pytest tests -v
