@@ -1,0 +1,7 @@
+boto3
+opencv-python-headless
+opencv-stubs
+numpy
+pydantic
+ultralytics
+pytest

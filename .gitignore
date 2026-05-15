@@ -1,0 +1,11 @@
+# --- PYTHON ---
+__pycache__/
+.env
+.venv
+
+# --- IDE ---
+.vscode/
+.idea/
+
+# --- DOCKER ---
+*.log

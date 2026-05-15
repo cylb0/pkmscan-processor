@@ -1,0 +1,3 @@
+[submodule "aws_shared"]
+	path = aws_shared
+	url = https://github.com/cylb0/pkmscan-shared.git
