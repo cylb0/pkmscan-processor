@@ -1,8 +1,9 @@
 import os
 import logging
-from aws_shared.schemas import ImageTask
-from aws_shared.constants import FOLDER_MEDIA, get_s3_img_key
-from aws_shared.aws_clients import AWSClientManager, QueueAlias
+from shared.messaging import ImageTask
+from shared.constants import FOLDER_MEDIA
+from shared.utils.storage import get_s3_img_key
+from shared.aws import AWSClientManager, QueueAlias
 from errors.processing import PokemonCardDetectionError
 from pokemon_card_processor import PokemonCardProcessor
 from utils.image_utils import save_as_webp

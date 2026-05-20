@@ -1,7 +1,7 @@
 import logging
 import sys
 from tasks import process_messages
-from aws_shared.aws_clients import QueueAlias
+from shared.aws import QueueAlias
 import os
 from pokemon_card_processor import PokemonCardProcessor
 
