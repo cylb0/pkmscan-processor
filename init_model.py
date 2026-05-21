@@ -1,4 +1,4 @@
-from aws_shared.aws_clients import aws_client
+from shared.aws import aws_client
 import os
 import sys
 
