@@ -13,14 +13,12 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
-def poll_and_process(processor: PokemonCardProcessor, max_empty_polls: int):
-    from aws_shared.aws_clients import aws_client
-
+def poll_and_process(processor: PokemonCardProcessor, max_empty_polls: int, client):
     empty_polls = 0
     logger.info("Polling starts")
 
     while empty_polls < max_empty_polls:
-        messages = aws_client.receive_message(
+        messages = client.receive_message(
             QueueAlias.RAW_IMAGES, wait_time_seconds=10
         )
 
@@ -32,16 +30,19 @@ def poll_and_process(processor: PokemonCardProcessor, max_empty_polls: int):
         empty_polls = 0
         logger.info(f"Processing {len(messages)} messages")
 
-        process_messages(messages, aws_client, processor)
+        process_messages(messages, client, processor)
 
     logger.info("No messages for a while, stopping worker")
 
 
 def run():
     logger.info("Starting image lab worker")
+
+    from shared.aws import aws_client
+
     model_path = os.getenv("YOLO_SEG_MODEL_LOCALPATH")
     processor = PokemonCardProcessor(model_path)
-    poll_and_process(processor, 5)
+    poll_and_process(processor, 5, aws_client)
 
 
 if __name__ == "__main__":
