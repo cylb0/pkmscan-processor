@@ -10,9 +10,9 @@ class PokemonCardProcessor:
         self.model = YOLO(model_path)
         self.aspect_ratio = 63 / 88
         self.axis_treshold = 0.05
-        self.target_height = 880
+        self.target_height = 700
         self.target_width = int(self.target_height * self.aspect_ratio)
-        self.min_area = self.target_height * self.target_width * 0.8
+        self.min_area = self.target_height * self.target_width * 0.3
 
     def process(self, input_path: str) -> np.ndarray:
         img = self._load_image(input_path)
