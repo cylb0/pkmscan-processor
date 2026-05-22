@@ -1,6 +1,6 @@
 import os
 import logging
-from shared.messaging import ImageTask
+from shared.messaging import ImageTask, CardImageProcessedPayload, DBUpdateMessage, DBUpdateType
 from shared.domain import CardIdentity
 from shared.constants import FOLDER_MEDIA
 from shared.utils.storage import get_s3_img_key
@@ -45,6 +45,16 @@ def process_image(
         
         client.delete_file(task.s3_key)
         logger.info(f"Successfully deleted original S3 object: {task.s3_key}")
+
+        update_event = DBUpdateMessage(
+            event_type=DBUpdateType.CARD_IMAGE_PROCESSED,
+            payload=CardImageProcessedPayload(
+                id=card_data.id,
+                master_image_path=processed_key
+            )
+        )
+        client.trigger_database_update(update_event)
+        logger.info(f"Successfully published DB update event for card {card_data.id}")
 
     except PokemonCardDetectionError as e:
         logger.warning(f"Detection failed for card {card_data.id}: {e}")
