@@ -17,10 +17,10 @@ class TestPokemonCardProcessor:
             processor = PokemonCardProcessor("dummy_model.pt")
 
             assert processor.aspect_ratio == 63 / 88
-            assert processor.target_height == 880
-            assert processor.target_width == 630
+            assert processor.target_height == 700
+            assert processor.target_width == 501
             assert processor.axis_treshold == 0.05
-            assert processor.min_area == 630 * 880 * 0.8
+            assert processor.min_area == pytest.approx(700 * 501 * 0.3)
 
     class TestCheckResolution:
         def test__nominal(self, processor):
@@ -126,7 +126,7 @@ class TestPokemonCardProcessor:
 
             result = processor._straighten_card(fake_img, quad)
 
-            assert result.shape == (880, 630, 3)
+            assert result.shape == (700, 501, 3)
             assert result.dtype == np.uint8
 
         @patch("pokemon_card_processor.cv2.warpPerspective")

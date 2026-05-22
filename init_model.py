@@ -16,7 +16,7 @@ def download_model():
     print("Downloading model from s3...")
     try:
         aws_client.download_file(s3_key, local_path)
-        print("Model downloaded successfully to {local_path}")
+        print(f"Model downloaded successfully to {local_path}")
     except Exception as e:
         print(f"Error downloading model: {e}")
         sys.exit(1)
