@@ -42,7 +42,7 @@ def process_image(
         )
         client.upload_file(local_processed_path, processed_key)
         logger.info(f"Successfully uploaded processed image to {processed_key}")
-        print("TYPE", type(task.s3_key), "VALUE", repr(task.s3_key))
+        
         client.delete_file(task.s3_key)
         logger.info(f"Successfully deleted original S3 object: {task.s3_key}")
 
