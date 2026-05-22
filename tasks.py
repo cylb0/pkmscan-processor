@@ -1,6 +1,6 @@
 import os
 import logging
-from shared.messaging import ImageTask, CardImageProcessedPayload, DBUpdateMessage, DBUpdateType
+from shared.messaging import ImageTask, CardImageProcessedPayload, DBUpdateMessage, DBUpdateType, ImageProcessingStatus
 from shared.domain import CardIdentity
 from shared.constants import FOLDER_MEDIA
 from shared.utils.storage import get_s3_img_key
@@ -8,6 +8,7 @@ from shared.aws import AWSClientManager, QueueAlias
 from errors.processing import PokemonCardDetectionError
 from pokemon_card_processor import PokemonCardProcessor
 from utils.image_utils import save_as_webp
+from typing import Optional
 
 logger = logging.getLogger(__name__)
 
@@ -23,12 +24,14 @@ def process_image(
     original_extension = os.path.splitext(task.s3_key)[1].lower()
     card_data: CardIdentity = task.card
     local_raw_path = f"/tmp/{card_data.id}_raw{original_extension}"
-
     local_processed_path = f"/tmp/{card_data.id}_processed.webp"
+
+    status = ImageProcessingStatus.SUCCESS
+    processed_key = None
+    error_msg = None
 
     try:
         logger.info(f"Processing image for card {card_data.id}")
-        print("KEY", task.s3_key)
         client.download_file(task.s3_key, local_raw_path)
 
         card_img = processor.process(local_raw_path)
@@ -43,28 +46,50 @@ def process_image(
         client.upload_file(local_processed_path, processed_key)
         logger.info(f"Successfully uploaded processed image to {processed_key}")
         
-        client.delete_file(task.s3_key)
-        logger.info(f"Successfully deleted original S3 object: {task.s3_key}")
-
-        update_event = DBUpdateMessage(
-            event_type=DBUpdateType.CARD_IMAGE_PROCESSED,
-            payload=CardImageProcessedPayload(
-                id=card_data.id,
-                master_image_path=processed_key
-            )
-        )
-        client.trigger_database_update(update_event)
-        logger.info(f"Successfully published DB update event for card {card_data.id}")
+        try:
+            client.delete_file(task.s3_key)
+            logger.info(f"Successfully deleted original S3 object: {task.s3_key}")
+        except Exception as e:
+            logger.warning(f"Failed to delete original S3 object {task.s3_key}: {e}")
 
     except PokemonCardDetectionError as e:
         logger.warning(f"Detection failed for card {card_data.id}: {e}")
+        status = ImageProcessingStatus.FAILED
+        error_msg = str(e)
+
     except Exception as e:
         logger.error(f"Unexpected error processing {card_data.id}: {e}")
+        status = ImageProcessingStatus.FAILED
+        error_msg = f"Unexpected error {e}"
+
     finally:
+        _publish_db_update(client, card_data.id, status, processed_key, error_msg)
+
         for path in [local_raw_path, local_processed_path]:
             if os.path.exists(path):
                 os.remove(path)
 
+def _publish_db_update(
+        client: AWSClientManager,
+        card_id: int,
+        status: ImageProcessingStatus,
+        processed_key: Optional[str] = None,
+        error_msg: Optional[str] = None
+):
+    try:
+        update_event = DBUpdateMessage(
+            event_type=DBUpdateType.CARD_IMAGE_PROCESSED,
+            payload=CardImageProcessedPayload(
+                id=card_id,
+                status=status,
+                master_image_path=processed_key,
+                error_message=error_msg
+            )
+        )
+        client.trigger_database_update(update_event)
+        logger.info(f"Published DB Update event ({status.value}) for card {card_id}")
+    except Exception as sqs_err:
+        logger.critical(f"Failed to send DB Update status to SQS for card {card_id}: {sqs_err}")
 
 def process_messages(messages, client, processor: PokemonCardProcessor):
     for msg in messages:
