@@ -103,3 +103,19 @@ def process_messages(messages, client, processor: PokemonCardProcessor):
             logger.info(f"Image processed and deleted for card {card_data.id}")
         except Exception as e:
             logger.error(f"Failed to process {msg['MessageId']}: {e}")
+
+def process_message(msg: dict, client: AWSClientManager, processor: PokemonCardProcessor) -> None:
+    """Parses and orchestrates a single SQS image task.
+
+    If it raises an exception, generic start_sqs_worker will skip the deletion,
+    allowing SQS to retry the message later.
+    """
+    logger.info(f"Received message: {msg}")
+    try:
+        task: ImageTask = ImageTask.model_validate_json(msg["Body"])
+        card_data: CardIdentity = task.card
+
+        process_image(task, client, processor)
+        logger.info(f"Image processing complete for card {card_data.id}")
+    except Exception as e:
+        raise e
