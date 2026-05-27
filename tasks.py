@@ -91,19 +91,6 @@ def _publish_db_update(
     except Exception as sqs_err:
         logger.critical(f"Failed to send DB Update status to SQS for card {card_id}: {sqs_err}")
 
-def process_messages(messages, client, processor: PokemonCardProcessor):
-    for msg in messages:
-        logger.info(f"Received message: {msg}")
-        try:
-            task: ImageTask = ImageTask.model_validate_json(msg["Body"])
-            card_data: CardIdentity = task.card
-            logger.info(f"Processing image for card {card_data.id}")
-            process_image(task, client, processor)
-            client.delete_message(msg["ReceiptHandle"], QueueAlias.RAW_IMAGES)
-            logger.info(f"Image processed and deleted for card {card_data.id}")
-        except Exception as e:
-            logger.error(f"Failed to process {msg['MessageId']}: {e}")
-
 def process_message(msg: dict, client: AWSClientManager, processor: PokemonCardProcessor) -> None:
     """Parses and orchestrates a single SQS image task.
 
